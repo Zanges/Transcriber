@@ -1,9 +1,6 @@
 use iced::widget::{container, Text};
 use iced::{executor, Application, Command, Element, Theme};
 use iced::window;
-use iced_native::{command::Action, keyboard, Runtime};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 struct MessageApp {
     popup_window: Option<window::Id>,
@@ -37,14 +34,13 @@ impl Application for MessageApp {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::TogglePopup => {
-                if let Some(window_id) = self.popup_window {
+                if self.popup_window.is_some() {
                     self.popup_window = None;
-                    window::close(window_id)
+                    window::close()
                 } else {
                     let window_id = window::Id::unique();
                     self.popup_window = Some(window_id);
-                    window::new(window::Settings {
-                        id: window_id,
+                    window::create(window::Settings {
                         size: (300, 100),
                         position: window::Position::Centered,
                         ..Default::default()
@@ -52,11 +48,8 @@ impl Application for MessageApp {
                 }
             }
             Message::ClosePopup => {
-                if let Some(window_id) = self.popup_window.take() {
-                    window::close(window_id)
-                } else {
-                    Command::none()
-                }
+                self.popup_window = None;
+                window::close()
             }
         }
     }
