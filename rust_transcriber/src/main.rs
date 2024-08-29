@@ -1,6 +1,6 @@
 use iced::keyboard::{Event, KeyCode};
-use iced::widget::{container, Column, Text};
-use iced::{executor, Application, Command, Element, Event as IcedEvent, Settings, Subscription};
+use iced::widget::{container, Text};
+use iced::{executor, Application, Command, Element, Event as IcedEvent, Settings, Subscription, Theme};
 
 struct MessageApp {
     show_message: bool,
@@ -16,6 +16,7 @@ impl Application for MessageApp {
     type Message = Message;
     type Executor = executor::Default;
     type Flags = ();
+    type Theme = Theme;
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
@@ -48,7 +49,7 @@ impl Application for MessageApp {
     }
 
     fn view(&self) -> Element<Message> {
-        let content = if self.show_message {
+        let content: Element<_> = if self.show_message {
             Text::new("Hello! This is a message box.").into()
         } else {
             Text::new("Press 'M' to show/hide the message.").into()
