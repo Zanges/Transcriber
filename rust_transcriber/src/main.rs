@@ -74,6 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             VirtualKeyCode::Escape => {
                                 println!("Escape key pressed. Exiting...");
                                 *control_flow = ControlFlow::Exit;
+                                running.store(false, Ordering::SeqCst);
                             }
                             _ => println!("Other key pressed: {:?}", keycode),
                         }
@@ -96,6 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             VirtualKeyCode::Escape => {
                                 println!("Escape key pressed (device event). Exiting...");
                                 *control_flow = ControlFlow::Exit;
+                                running.store(false, Ordering::SeqCst);
                             }
                             _ => println!("Other key pressed (device event): {:?}", keycode),
                         }
