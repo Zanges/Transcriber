@@ -13,13 +13,12 @@ impl HotkeyHandler {
         let hotkey = HotKey::new(None, global_hotkey::hotkey::Code::F7);
         manager.register(hotkey)?;
 
-        let (sender, receiver) = crossbeam_channel::unbounded();
-        GlobalHotKeyEvent::set_receiver(sender);
+        let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel: receiver,
+            global_hotkey_channel,
         })
     }
 
