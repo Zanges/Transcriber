@@ -11,7 +11,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let config = Config::load()?;
-    println!("Loaded configuration: {:?}", config);
+    println!("Loaded configuration:");
+    println!("  Hotkey: {}", config.hotkey);
+    println!("  Language: {}", config.language);
+    println!("  OpenAI API Key: {}", if config.openai_api_key.is_empty() { "Not set" } else { "********" });
 
     let event_loop = EventLoop::new();
     let hotkey_handler = HotkeyHandler::new(&config.hotkey)?;

@@ -6,6 +6,7 @@ use std::path::Path;
 pub struct Config {
     pub hotkey: String,
     pub language: String,
+    pub openai_api_key: String,
 }
 
 impl Default for Config {
@@ -13,6 +14,7 @@ impl Default for Config {
         Config {
             hotkey: "F7".to_string(),
             language: "en".to_string(),
+            openai_api_key: String::new(),
         }
     }
 }
