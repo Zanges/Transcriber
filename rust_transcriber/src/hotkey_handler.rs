@@ -4,7 +4,7 @@ use winit::event_loop::EventLoop;
 pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
     hotkey: HotKey,
-    global_hotkey_channel: std::sync::mpsc::Receiver<GlobalHotKeyEvent>,
+    global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
 }
 
 impl HotkeyHandler {
@@ -18,7 +18,7 @@ impl HotkeyHandler {
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel: global_hotkey_channel.clone(),
+            global_hotkey_channel,
         })
     }
 
