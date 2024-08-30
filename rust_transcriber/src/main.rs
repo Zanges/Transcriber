@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
     let hotkey_handler = HotkeyHandler::new()?;
 
-    hotkey_handler.handle_events(&event_loop);
+    hotkey_handler.handle_events(event_loop);
 
     Ok(())
 }

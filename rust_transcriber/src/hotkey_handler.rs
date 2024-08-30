@@ -1,5 +1,6 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use winit::event_loop::EventLoop;
+use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
@@ -18,19 +19,22 @@ impl HotkeyHandler {
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel: global_hotkey_channel.clone(),
+            global_hotkey_channel,
         })
     }
 
-    pub fn handle_events(&self, event_loop: &EventLoop<()>) {
+    pub fn handle_events(self, event_loop: EventLoop<()>) {
         println!("Press F7 to trigger the global hotkey. Press Ctrl+C to exit.");
+
+        let hotkey = self.hotkey;
+        let channel = self.global_hotkey_channel;
 
         event_loop.run(move |event, _, control_flow| {
             *control_flow = winit::event_loop::ControlFlow::Poll;
 
             if let winit::event::Event::NewEvents(_) = event {
-                while let Ok(hotkey_event) = self.global_hotkey_channel.try_recv() {
-                    if hotkey_event.id == self.hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
+                while let Ok(hotkey_event) = channel.try_recv() {
+                    if hotkey_event.id == hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
                         println!("Global Hotkey: You pressed F7!");
                     }
                 }
