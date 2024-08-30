@@ -5,6 +5,7 @@ use global_hotkey::{
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
 use msgbox::IconType;
+use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
@@ -14,12 +15,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
-    println!("Press F7 to trigger the global hotkey. Press Ctrl+C to exit.");
+    println!("Press F7 to trigger the global hotkey. Press Escape to exit.");
+    println!("Debugging: Global hotkey registered: {:?}", hotkey);
+
+    let mut last_event_time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
-        println!("Received event: {:?}", event);
+        let now = Instant::now();
+        println!("Received event after {:?}: {:?}", now.duration_since(last_event_time), event);
+        last_event_time = now;
 
         match event {
             Event::NewEvents(_) => {
@@ -33,29 +39,55 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
-            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
-                println!("Keyboard input: {:?}", input);
-                if let Some(VirtualKeyCode::F7) = input.virtual_keycode {
+            Event::WindowEvent { 
+                event: WindowEvent::KeyboardInput { 
+                    input,
+                    ..
+                },
+                ..
+            } => {
+                println!("Window keyboard input: {:?}", input);
+                if let Some(keycode) = input.virtual_keycode {
                     if input.state == ElementState::Pressed {
-                        println!("F7 key pressed directly!");
-                        msgbox::create("Direct Key Press", "You pressed F7 directly!", IconType::Info)
-                            .expect("Failed to create message box");
+                        match keycode {
+                            VirtualKeyCode::F7 => {
+                                println!("F7 key pressed directly (window event)!");
+                                msgbox::create("Direct Key Press", "You pressed F7 directly (window event)!", IconType::Info)
+                                    .expect("Failed to create message box");
+                            }
+                            VirtualKeyCode::Escape => {
+                                println!("Escape key pressed. Exiting...");
+                                *control_flow = ControlFlow::Exit;
+                            }
+                            _ => println!("Other key pressed: {:?}", keycode),
+                        }
                     }
                 }
             }
-            Event::DeviceEvent { event: DeviceEvent::Key(input), .. } => {
+            Event::DeviceEvent { 
+                event: DeviceEvent::Key(input),
+                ..
+            } => {
                 println!("Device key event: {:?}", input);
-                if let Some(VirtualKeyCode::F7) = input.virtual_keycode {
+                if let Some(keycode) = input.virtual_keycode {
                     if input.state == ElementState::Pressed {
-                        println!("F7 key pressed (device event)!");
-                        msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
-                            .expect("Failed to create message box");
+                        match keycode {
+                            VirtualKeyCode::F7 => {
+                                println!("F7 key pressed (device event)!");
+                                msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
+                                    .expect("Failed to create message box");
+                            }
+                            VirtualKeyCode::Escape => {
+                                println!("Escape key pressed (device event). Exiting...");
+                                *control_flow = ControlFlow::Exit;
+                            }
+                            _ => println!("Other key pressed (device event): {:?}", keycode),
+                        }
                     }
                 }
             }
             Event::LoopDestroyed => {
                 println!("Event loop is being destroyed.");
-                *control_flow = ControlFlow::Exit;
             }
             _ => {}
         }
