@@ -5,7 +5,6 @@ use global_hotkey::{
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
 use msgbox::IconType;
-use std::time::Duration;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -14,7 +13,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = running.clone();
 
     ctrlc::set_handler(move || {
-        println!("Ctrl+C received, exiting...");
         r.store(false, Ordering::SeqCst);
         std::process::exit(0);
     })?;
@@ -27,13 +25,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
     println!("Press F7 to trigger the global hotkey. Press Ctrl+C to exit.");
-    println!("Debugging: Global hotkey registered: {:?}", hotkey);
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
 
         if !running.load(Ordering::SeqCst) {
-            println!("Running flag is false. Exiting...");
             *control_flow = ControlFlow::Exit;
             return;
         }
@@ -41,9 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match event {
             Event::NewEvents(_) => {
                 while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
-                    println!("Received hotkey event: {:?}", hotkey_event);
                     if hotkey_event.id == hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
-                        println!("Hotkey F7 pressed!");
                         msgbox::create("Global Hotkey", "You pressed F7!", IconType::Info)
                             .expect("Failed to create message box");
                     }
@@ -60,7 +54,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if input.state == ElementState::Pressed {
                         match keycode {
                             VirtualKeyCode::F7 => {
-                                println!("F7 key pressed directly (window event)!");
                                 msgbox::create("Direct Key Press", "You pressed F7 directly (window event)!", IconType::Info)
                                     .expect("Failed to create message box");
                                 return;
@@ -78,7 +71,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if input.state == ElementState::Pressed {
                         match keycode {
                             VirtualKeyCode::F7 => {
-                                println!("F7 key pressed (device event)!");
                                 msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
                                     .expect("Failed to create message box");
                                 return;
