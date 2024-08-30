@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ctrlc::set_handler(move || {
         println!("Ctrl+C received, exiting...");
         r.store(false, Ordering::SeqCst);
+        std::process::exit(0);
     })?;
 
     let event_loop = EventLoop::new();
@@ -29,12 +30,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Debugging: Global hotkey registered: {:?}", hotkey);
 
     event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Poll;
+
         if !running.load(Ordering::SeqCst) {
+            println!("Running flag is false. Exiting...");
             *control_flow = ControlFlow::Exit;
             return;
         }
-
-        *control_flow = ControlFlow::WaitUntil(std::time::Instant::now() + Duration::from_millis(100));
 
         match event {
             Event::NewEvents(_) => {
