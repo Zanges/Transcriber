@@ -4,7 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct AudioRecorder {
     is_recording: Arc<AtomicBool>,
@@ -20,6 +20,10 @@ impl AudioRecorder {
     }
 
     pub fn start_recording(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.is_recording.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
         let host = cpal::default_host();
         let device = host.default_input_device().expect("No input device available");
 
@@ -28,7 +32,8 @@ impl AudioRecorder {
         let temp_dir = PathBuf::from("temporary");
         fs::create_dir_all(&temp_dir)?;
 
-        let file_path = temp_dir.join("recorded_audio.wav");
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        let file_path = temp_dir.join(format!("recorded_audio_{}.wav", timestamp));
         let spec = hound::WavSpec {
             channels: config.channels() as _,
             sample_rate: config.sample_rate().0 as _,
@@ -66,10 +71,15 @@ impl AudioRecorder {
         stream.play()?;
         self.stream = Some(stream);
 
+        println!("Recording started.");
         Ok(())
     }
 
     pub fn stop_recording(&mut self) {
+        if !self.is_recording.load(Ordering::SeqCst) {
+            return;
+        }
+
         self.is_recording.store(false, Ordering::SeqCst);
         if let Some(stream) = self.stream.take() {
             drop(stream);
