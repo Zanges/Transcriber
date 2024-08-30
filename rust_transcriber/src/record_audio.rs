@@ -66,6 +66,7 @@ impl AudioRecorder {
                 err_fn,
                 None,
             )?,
+            _ => return Err("Unsupported sample format".into()),
         };
 
         stream.play()?;
