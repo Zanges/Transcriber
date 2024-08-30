@@ -8,14 +8,17 @@ use msgbox::IconType;
 use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
 
     ctrlc::set_handler(move || {
+        println!("Ctrl+C received, exiting...");
         r.store(false, Ordering::SeqCst);
     })?;
+
     let event_loop = EventLoop::new();
     let manager = GlobalHotKeyManager::new().unwrap();
     let hotkey = HotKey::new(None, global_hotkey::hotkey::Code::F7);
@@ -23,18 +26,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
-    println!("Press F7 to trigger the global hotkey. Press Escape to exit.");
+    println!("Press F7 to trigger the global hotkey. Press Escape or Ctrl+C to exit.");
     println!("Debugging: Global hotkey registered: {:?}", hotkey);
 
     let mut last_event_time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         if !running.load(Ordering::SeqCst) {
+            println!("Exiting event loop...");
             *control_flow = ControlFlow::Exit;
             return;
         }
 
-        *control_flow = ControlFlow::Wait;
+        *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(100));
 
         let now = Instant::now();
         println!("Received event after {:?}: {:?}", now.duration_since(last_event_time), event);
@@ -104,5 +108,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             _ => {}
         }
+
+        // Check if we should exit
+        if !running.load(Ordering::SeqCst) {
+            println!("Running flag is false, exiting event loop...");
+            *control_flow = ControlFlow::Exit;
+        }
     });
+
+    Ok(())
 }
