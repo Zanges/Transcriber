@@ -90,7 +90,7 @@ impl AudioRecorder {
 
 fn write_input_data<T>(input: &[T], writer: &Arc<std::sync::Mutex<hound::WavWriter<std::io::BufWriter<std::fs::File>>>>, is_recording: &Arc<AtomicBool>)
 where
-    T: Sample,
+    T: Sample<Float = f32>,
 {
     if !is_recording.load(Ordering::SeqCst) {
         return;
