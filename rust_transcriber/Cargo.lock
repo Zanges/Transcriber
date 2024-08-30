@@ -706,6 +706,7 @@ dependencies = [
 name = "rust_transcriber"
 version = "0.1.0"
 dependencies = [
+ "crossbeam-channel",
  "ctrlc",
  "global-hotkey",
  "winit",
