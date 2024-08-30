@@ -1,5 +1,5 @@
 use global_hotkey::{
-    hotkey::{HotKey, Modifiers},
+    hotkey::HotKey,
     GlobalHotKeyEvent, GlobalHotKeyManager,
 };
 use winit::event_loop::{EventLoop, ControlFlow};
@@ -8,7 +8,6 @@ use msgbox::IconType;
 use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
@@ -115,6 +114,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             *control_flow = ControlFlow::Exit;
         }
     });
-
-    Ok(())
 }
