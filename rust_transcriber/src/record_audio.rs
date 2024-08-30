@@ -91,7 +91,7 @@ impl AudioRecorder {
 fn write_input_data<T, U>(input: &[T], writer: &Arc<std::sync::Mutex<hound::WavWriter<std::io::BufWriter<std::fs::File>>>>, is_recording: &Arc<AtomicBool>)
 where
     T: Sample,
-    U: Sample + hound::Sample,
+    U: Sample + hound::Sample + From<f32>,
 {
     if !is_recording.load(Ordering::SeqCst) {
         return;
@@ -99,8 +99,9 @@ where
 
     if let Ok(mut guard) = writer.try_lock() {
         for &sample in input.iter() {
-            let sample: U = U::from(&sample);
-            guard.write_sample(sample).unwrap();
+            let sample_f32: f32 = sample.to_float();
+            let sample_u: U = U::from(sample_f32);
+            guard.write_sample(sample_u).unwrap();
         }
     }
 }
