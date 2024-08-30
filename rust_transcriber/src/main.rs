@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::NewEvents(_) => {
                 while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
                     println!("Received hotkey event: {:?}", hotkey_event);
-                    if hotkey_event.id == hotkey.id() {
+                    if hotkey_event.id == hotkey.id() && hotkey_event.state == ElementState::Pressed {
                         println!("Hotkey F7 pressed!");
                         msgbox::create("Global Hotkey", "You pressed F7!", IconType::Info)
                             .expect("Failed to create message box");
@@ -63,6 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("F7 key pressed directly (window event)!");
                                 msgbox::create("Direct Key Press", "You pressed F7 directly (window event)!", IconType::Info)
                                     .expect("Failed to create message box");
+                                return;
                             }
                             _ => {},
                         }
@@ -80,6 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("F7 key pressed (device event)!");
                                 msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
                                     .expect("Failed to create message box");
+                                return;
                             }
                             _ => {},
                         }
