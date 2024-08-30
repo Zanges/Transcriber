@@ -1,13 +1,9 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::Event;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let running = Arc::new(AtomicBool::new(true));
-
-    ctrlc::set_handler(move || {
+    ctrlc::set_handler(|| {
         std::process::exit(0);
     })?;
 
