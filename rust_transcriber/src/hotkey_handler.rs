@@ -9,9 +9,9 @@ pub struct HotkeyHandler {
 }
 
 impl HotkeyHandler {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(hotkey_str: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
-        let hotkey = HotKey::new(None, global_hotkey::hotkey::Code::F7);
+        let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
 
         Ok(Self {
@@ -22,7 +22,7 @@ impl HotkeyHandler {
     }
 
     pub fn handle_events(self, event_loop: EventLoop<()>) {
-        println!("Press F7 to trigger the global hotkey. Press Ctrl+C to exit.");
+        println!("Press {:?} to trigger the global hotkey. Press Ctrl+C to exit.", self.hotkey);
 
         event_loop.run(move |event, _, control_flow| {
             *control_flow = winit::event_loop::ControlFlow::Poll;
@@ -30,7 +30,7 @@ impl HotkeyHandler {
             if let winit::event::Event::NewEvents(_) = event {
                 if let Ok(hotkey_event) = self.global_hotkey_channel.try_recv() {
                     if hotkey_event.id == self.hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
-                        println!("Global Hotkey: You pressed F7!");
+                        println!("Global Hotkey: You pressed {:?}!", self.hotkey);
                     }
                 }
             }

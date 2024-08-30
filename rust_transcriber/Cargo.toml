@@ -10,3 +10,5 @@ global-hotkey = "0.4.1"
 winit = "0.28.6"
 ctrlc = "3.2.5"
 crossbeam-channel = "0.5.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
