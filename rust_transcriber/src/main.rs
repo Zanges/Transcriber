@@ -5,7 +5,7 @@ use global_hotkey::{
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
 use msgbox::IconType;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -28,24 +28,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Press F7 to trigger the global hotkey. Press Escape or Ctrl+C to exit.");
     println!("Debugging: Global hotkey registered: {:?}", hotkey);
 
-    let mut last_event_time = Instant::now();
-
     event_loop.run(move |event, _, control_flow| {
         if !running.load(Ordering::SeqCst) {
-            println!("Exiting event loop...");
             *control_flow = ControlFlow::Exit;
             return;
         }
 
-        *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(100));
-
-        let now = Instant::now();
-        println!("Received event after {:?}: {:?}", now.duration_since(last_event_time), event);
-        last_event_time = now;
+        *control_flow = ControlFlow::WaitUntil(std::time::Instant::now() + Duration::from_millis(100));
 
         match event {
             Event::NewEvents(_) => {
-                println!("Checking for hotkey events...");
                 while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
                     println!("Received hotkey event: {:?}", hotkey_event);
                     if hotkey_event.id == hotkey.id() {
@@ -62,7 +54,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 ..
             } => {
-                println!("Window keyboard input: {:?}", input);
                 if let Some(keycode) = input.virtual_keycode {
                     if input.state == ElementState::Pressed {
                         match keycode {
@@ -77,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 *control_flow = ControlFlow::Exit;
                                 return;
                             }
-                            _ => println!("Other key pressed: {:?}", keycode),
+                            _ => {},
                         }
                     }
                 }
@@ -86,7 +77,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 event: DeviceEvent::Key(input),
                 ..
             } => {
-                println!("Device key event: {:?}", input);
                 if let Some(keycode) = input.virtual_keycode {
                     if input.state == ElementState::Pressed {
                         match keycode {
@@ -101,21 +91,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 *control_flow = ControlFlow::Exit;
                                 return;
                             }
-                            _ => println!("Other key pressed (device event): {:?}", keycode),
+                            _ => {},
                         }
                     }
                 }
             }
-            Event::LoopDestroyed => {
-                println!("Event loop is being destroyed.");
-            }
             _ => {}
-        }
-
-        // Check if we should exit
-        if !running.load(Ordering::SeqCst) {
-            println!("Running flag is false, exiting event loop...");
-            *control_flow = ControlFlow::Exit;
         }
     });
 }
