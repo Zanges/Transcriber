@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
-    println!("Press F7 to trigger the global hotkey. Press Escape or Ctrl+C to exit.");
+    println!("Press F7 to trigger the global hotkey. Press Ctrl+C to exit.");
     println!("Debugging: Global hotkey registered: {:?}", hotkey);
 
     event_loop.run(move |event, _, control_flow| {
@@ -64,12 +64,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 msgbox::create("Direct Key Press", "You pressed F7 directly (window event)!", IconType::Info)
                                     .expect("Failed to create message box");
                             }
-                            VirtualKeyCode::Escape => {
-                                println!("Escape key pressed. Exiting...");
-                                running.store(false, Ordering::SeqCst);
-                                *control_flow = ControlFlow::Exit;
-                                return;
-                            }
                             _ => {},
                         }
                     }
@@ -86,12 +80,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("F7 key pressed (device event)!");
                                 msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
                                     .expect("Failed to create message box");
-                            }
-                            VirtualKeyCode::Escape => {
-                                println!("Escape key pressed (device event). Exiting...");
-                                running.store(false, Ordering::SeqCst);
-                                *control_flow = ControlFlow::Exit;
-                                return;
                             }
                             _ => {},
                         }
