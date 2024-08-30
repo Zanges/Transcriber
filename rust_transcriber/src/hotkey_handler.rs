@@ -2,6 +2,7 @@ use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotK
 use winit::event_loop::EventLoop;
 
 pub struct HotkeyHandler {
+    #[allow(dead_code)]
     manager: GlobalHotKeyManager,
     hotkey: HotKey,
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
@@ -16,7 +17,7 @@ impl HotkeyHandler {
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel: GlobalHotKeyEvent::receiver(),
+            global_hotkey_channel: GlobalHotKeyEvent::receiver().clone(),
         })
     }
 
