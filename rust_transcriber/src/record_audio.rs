@@ -37,10 +37,16 @@ impl AudioRecorder {
         let spec = hound::WavSpec {
             channels: config.channels() as _,
             sample_rate: config.sample_rate().0 as _,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
+            bits_per_sample: 32,
+            sample_format: hound::SampleFormat::Float,
         };
-        let writer = Arc::new(std::sync::Mutex::new(hound::WavWriter::create(file_path, spec)?));
+        let writer = Arc::new(std::sync::Mutex::new(match hound::WavWriter::create(file_path, spec) {
+            Ok(w) => w,
+            Err(e) => {
+                eprintln!("Error creating WavWriter: {}", e);
+                return Err(Box::new(e));
+            }
+        }));
 
         let err_fn = |err| eprintln!("An error occurred on the audio stream: {}", err);
 
@@ -91,7 +97,7 @@ impl AudioRecorder {
 
 fn write_input_data<T>(input: &[T], writer: &Arc<std::sync::Mutex<hound::WavWriter<std::io::BufWriter<std::fs::File>>>>, is_recording: &Arc<AtomicBool>)
 where
-    T: Sample<Float = f32>,
+    T: Sample,
 {
     if !is_recording.load(Ordering::SeqCst) {
         return;
@@ -100,7 +106,11 @@ where
     if let Ok(mut guard) = writer.try_lock() {
         for &sample in input.iter() {
             let sample_f32: f32 = sample.to_float_sample();
-            guard.write_sample(sample_f32).unwrap();
+            if let Err(e) = guard.write_sample(sample_f32) {
+                eprintln!("Error writing sample: {}", e);
+                is_recording.store(false, Ordering::SeqCst);
+                return;
+            }
         }
     }
 }
