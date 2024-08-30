@@ -4,7 +4,6 @@ use global_hotkey::{
 };
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
-use msgbox::IconType;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -38,8 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::NewEvents(_) => {
                 while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
                     if hotkey_event.id == hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
-                        msgbox::create("Global Hotkey", "You pressed F7!", IconType::Info)
-                            .expect("Failed to create message box");
+                        println!("Global Hotkey: You pressed F7!");
                     }
                 }
             }
@@ -54,8 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if input.state == ElementState::Pressed {
                         match keycode {
                             VirtualKeyCode::F7 => {
-                                msgbox::create("Direct Key Press", "You pressed F7 directly (window event)!", IconType::Info)
-                                    .expect("Failed to create message box");
+                                println!("Direct Key Press: You pressed F7 directly (window event)!");
                                 return;
                             }
                             _ => {},
@@ -71,8 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if input.state == ElementState::Pressed {
                         match keycode {
                             VirtualKeyCode::F7 => {
-                                msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
-                                    .expect("Failed to create message box");
+                                println!("Device Key Press: You pressed F7 (device event)!");
                                 return;
                             }
                             _ => {},
