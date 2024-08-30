@@ -50,19 +50,19 @@ impl AudioRecorder {
         let stream = match config.sample_format() {
             SampleFormat::F32 => device.build_input_stream(
                 &config.into(),
-                move |data: &[f32], _: &_| write_input_data::<f32, i16>(data, &writer, &is_recording),
+                move |data: &[f32], _: &_| write_input_data(data, &writer, &is_recording),
                 err_fn,
                 None,
             )?,
             SampleFormat::I16 => device.build_input_stream(
                 &config.into(),
-                move |data: &[i16], _: &_| write_input_data::<i16, i16>(data, &writer, &is_recording),
+                move |data: &[i16], _: &_| write_input_data(data, &writer, &is_recording),
                 err_fn,
                 None,
             )?,
             SampleFormat::U16 => device.build_input_stream(
                 &config.into(),
-                move |data: &[u16], _: &_| write_input_data::<u16, i16>(data, &writer, &is_recording),
+                move |data: &[u16], _: &_| write_input_data(data, &writer, &is_recording),
                 err_fn,
                 None,
             )?,
@@ -88,10 +88,9 @@ impl AudioRecorder {
     }
 }
 
-fn write_input_data<T, U>(input: &[T], writer: &Arc<std::sync::Mutex<hound::WavWriter<std::io::BufWriter<std::fs::File>>>>, is_recording: &Arc<AtomicBool>)
+fn write_input_data<T>(input: &[T], writer: &Arc<std::sync::Mutex<hound::WavWriter<std::io::BufWriter<std::fs::File>>>>, is_recording: &Arc<AtomicBool>)
 where
     T: Sample,
-    U: Sample + hound::Sample + From<f32>,
 {
     if !is_recording.load(Ordering::SeqCst) {
         return;
@@ -99,9 +98,8 @@ where
 
     if let Ok(mut guard) = writer.try_lock() {
         for &sample in input.iter() {
-            let sample_f32: f32 = sample.to_float();
-            let sample_u: U = U::from(sample_f32);
-            guard.write_sample(sample_u).unwrap();
+            let sample_f32: f32 = sample.to_float_sample();
+            guard.write_sample(sample_f32).unwrap();
         }
     }
 }
