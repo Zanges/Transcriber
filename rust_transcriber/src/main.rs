@@ -6,10 +6,8 @@ use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
-    let running_clone = running.clone();
 
     ctrlc::set_handler(move || {
-        running_clone.store(false, Ordering::SeqCst);
         std::process::exit(0);
     })?;
 
@@ -24,11 +22,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
-
-        if !running.load(Ordering::SeqCst) {
-            *control_flow = ControlFlow::Exit;
-            return;
-        }
 
         if let Event::NewEvents(_) = event {
             while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
