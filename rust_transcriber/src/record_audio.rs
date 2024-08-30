@@ -8,16 +8,18 @@ use std::time::Duration;
 
 pub struct AudioRecorder {
     is_recording: Arc<AtomicBool>,
+    stream: Option<cpal::Stream>,
 }
 
 impl AudioRecorder {
     pub fn new() -> Self {
         AudioRecorder {
             is_recording: Arc::new(AtomicBool::new(false)),
+            stream: None,
         }
     }
 
-    pub fn start_recording(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn start_recording(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let host = cpal::default_host();
         let device = host.default_input_device().expect("No input device available");
 
@@ -62,17 +64,17 @@ impl AudioRecorder {
         };
 
         stream.play()?;
-
-        // Keep the stream alive until recording is stopped
-        while self.is_recording.load(Ordering::SeqCst) {
-            std::thread::sleep(Duration::from_millis(100));
-        }
+        self.stream = Some(stream);
 
         Ok(())
     }
 
-    pub fn stop_recording(&self) {
+    pub fn stop_recording(&mut self) {
         self.is_recording.store(false, Ordering::SeqCst);
+        if let Some(stream) = self.stream.take() {
+            drop(stream);
+        }
+        println!("Recording stopped and saved.");
     }
 }
 
