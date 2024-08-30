@@ -55,3 +55,35 @@ impl HotkeyHandler {
         });
     }
 }
+use openai::{
+    Client,
+    types::{
+        CreateTranscriptionRequest,
+        CreateTranscriptionRequestArgs,
+        AudioInput,
+    },
+};
+use std::path::Path;
+
+pub struct OpenAIHandler {
+    client: Client,
+}
+
+impl OpenAIHandler {
+    pub fn new(api_key: String) -> Self {
+        OpenAIHandler {
+            client: Client::new(api_key),
+        }
+    }
+
+    pub async fn transcribe_audio(&self, audio_path: &Path) -> Result<String, Box<dyn std::error::Error>> {
+        let audio_input = AudioInput::File(audio_path.to_path_buf());
+        let request = CreateTranscriptionRequestArgs::default()
+            .file(audio_input)
+            .model("whisper-1")
+            .build()?;
+
+        let response = self.client.audio().transcribe(request).await?;
+        Ok(response.text)
+    }
+}
