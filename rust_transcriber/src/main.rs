@@ -3,6 +3,7 @@ use global_hotkey::{
     GlobalHotKeyEvent, GlobalHotKeyManager,
 };
 use winit::event_loop::{EventLoop, ControlFlow};
+use winit::event::Event;
 use msgbox::IconType;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -18,18 +19,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
+        println!("Received event: {:?}", event);
+
         match event {
-            winit::event::Event::NewEvents(_) => {
-                if let Ok(event) = global_hotkey_channel.try_recv() {
-                    println!("Received hotkey event: {:?}", event);
-                    if event.id == hotkey.id() {
+            Event::NewEvents(_) => {
+                println!("Checking for hotkey events...");
+                while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
+                    println!("Received hotkey event: {:?}", hotkey_event);
+                    if hotkey_event.id == hotkey.id() {
                         println!("Hotkey F7 pressed!");
                         msgbox::create("Global Hotkey", "You pressed F7!", IconType::Info)
                             .expect("Failed to create message box");
                     }
                 }
             }
-            winit::event::Event::LoopDestroyed => {
+            Event::LoopDestroyed => {
+                println!("Event loop is being destroyed.");
                 *control_flow = ControlFlow::Exit;
             }
             _ => {}
