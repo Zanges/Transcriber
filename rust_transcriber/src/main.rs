@@ -6,10 +6,10 @@ use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let running = Arc::new(AtomicBool::new(true));
-    let r = running.clone();
+    let running_clone = running.clone();
 
     ctrlc::set_handler(move || {
-        r.store(false, Ordering::SeqCst);
+        running_clone.store(false, Ordering::SeqCst);
         std::process::exit(0);
     })?;
 
