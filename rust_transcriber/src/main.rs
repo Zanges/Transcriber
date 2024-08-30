@@ -3,12 +3,12 @@ use global_hotkey::{
     GlobalHotKeyEvent, GlobalHotKeyManager,
 };
 use winit::event_loop::EventLoop;
-use msgbox::create_message_box;
+use msgbox::IconType;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
     let manager = GlobalHotKeyManager::new().unwrap();
-    let hotkey = HotKey::new(Some(Modifiers::CONTROL), '1');
+    let hotkey = HotKey::new(Some(Modifiers::CONTROL), global_hotkey::hotkey::Code::Digit1);
     manager.register(hotkey).unwrap();
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         event_loop.run(move |_, _, _| {
             if let Ok(event) = global_hotkey_channel.try_recv() {
                 if event.id == hotkey.id() {
-                    create_message_box("Global Hotkey", "You pressed Ctrl+1!")
+                    msgbox::create("Global Hotkey", "You pressed Ctrl+1!", IconType::Info)
                         .expect("Failed to create message box");
                 }
             }
