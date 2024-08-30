@@ -2,7 +2,7 @@ use global_hotkey::{
     hotkey::{HotKey, Modifiers},
     GlobalHotKeyEvent, GlobalHotKeyManager,
 };
-use winit::event_loop::EventLoop;
+use winit::event_loop::{EventLoop, ControlFlow};
 use msgbox::IconType;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,19 +13,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
-    std::thread::spawn(move || {
-        event_loop.run(move |_, _, _| {
-            if let Ok(event) = global_hotkey_channel.try_recv() {
-                if event.id == hotkey.id() {
-                    msgbox::create("Global Hotkey", "You pressed Ctrl+1!", IconType::Info)
-                        .expect("Failed to create message box");
-                }
-            }
-        });
-    });
-
     println!("Press Ctrl+1 to trigger the global hotkey. Press Ctrl+C to exit.");
-    loop {
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        if let Ok(event) = global_hotkey_channel.try_recv() {
+            if event.id == hotkey.id() {
+                msgbox::create("Global Hotkey", "You pressed Ctrl+1!", IconType::Info)
+                    .expect("Failed to create message box");
+            }
+        }
+
+        if let winit::event::Event::LoopDestroyed = event {
+            *control_flow = ControlFlow::Exit;
+        }
+    });
 }
