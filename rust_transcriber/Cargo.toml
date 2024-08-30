@@ -12,3 +12,5 @@ ctrlc = "3.2.5"
 crossbeam-channel = "0.5.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
+cpal = "0.15.2"
+hound = "3.5.0"
