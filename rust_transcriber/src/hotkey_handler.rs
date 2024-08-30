@@ -1,6 +1,5 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use winit::event_loop::EventLoop;
-use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
@@ -14,12 +13,13 @@ impl HotkeyHandler {
         let hotkey = HotKey::new(None, global_hotkey::hotkey::Code::F7);
         manager.register(hotkey)?;
 
-        let global_hotkey_channel = GlobalHotKeyEvent::receiver();
+        let (sender, receiver) = crossbeam_channel::unbounded();
+        GlobalHotKeyEvent::set_receiver(sender);
 
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel,
+            global_hotkey_channel: receiver,
         })
     }
 
