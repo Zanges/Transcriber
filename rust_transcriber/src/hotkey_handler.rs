@@ -18,7 +18,7 @@ impl HotkeyHandler {
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel,
+            global_hotkey_channel: global_hotkey_channel.clone(),
         })
     }
 
