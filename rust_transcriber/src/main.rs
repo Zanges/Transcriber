@@ -3,7 +3,7 @@ use global_hotkey::{
     GlobalHotKeyEvent, GlobalHotKeyManager,
 };
 use winit::event_loop::{EventLoop, ControlFlow};
-use winit::event::Event;
+use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
 use msgbox::IconType;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,6 +29,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if hotkey_event.id == hotkey.id() {
                         println!("Hotkey F7 pressed!");
                         msgbox::create("Global Hotkey", "You pressed F7!", IconType::Info)
+                            .expect("Failed to create message box");
+                    }
+                }
+            }
+            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
+                println!("Keyboard input: {:?}", input);
+                if let Some(VirtualKeyCode::F7) = input.virtual_keycode {
+                    if input.state == ElementState::Pressed {
+                        println!("F7 key pressed directly!");
+                        msgbox::create("Direct Key Press", "You pressed F7 directly!", IconType::Info)
+                            .expect("Failed to create message box");
+                    }
+                }
+            }
+            Event::DeviceEvent { event: DeviceEvent::Key(input), .. } => {
+                println!("Device key event: {:?}", input);
+                if let Some(VirtualKeyCode::F7) = input.virtual_keycode {
+                    if input.state == ElementState::Pressed {
+                        println!("F7 key pressed (device event)!");
+                        msgbox::create("Device Key Press", "You pressed F7 (device event)!", IconType::Info)
                             .expect("Failed to create message box");
                     }
                 }
