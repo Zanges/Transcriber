@@ -1,9 +1,6 @@
-use global_hotkey::{
-    hotkey::HotKey,
-    GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState,
-};
+use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use winit::event_loop::{EventLoop, ControlFlow};
-use winit::event::{Event, WindowEvent, DeviceEvent, ElementState, VirtualKeyCode};
+use winit::event::Event;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -17,9 +14,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let event_loop = EventLoop::new();
-    let manager = GlobalHotKeyManager::new().unwrap();
+    let manager = GlobalHotKeyManager::new()?;
     let hotkey = HotKey::new(None, global_hotkey::hotkey::Code::F7);
-    manager.register(hotkey).unwrap();
+    manager.register(hotkey)?;
 
     let global_hotkey_channel = GlobalHotKeyEvent::receiver();
 
@@ -33,50 +30,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return;
         }
 
-        match event {
-            Event::NewEvents(_) => {
-                while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
-                    if hotkey_event.id == hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
-                        println!("Global Hotkey: You pressed F7!");
-                    }
+        if let Event::NewEvents(_) = event {
+            while let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
+                if hotkey_event.id == hotkey.id() && hotkey_event.state == HotKeyState::Pressed {
+                    println!("Global Hotkey: You pressed F7!");
                 }
             }
-            Event::WindowEvent { 
-                event: WindowEvent::KeyboardInput { 
-                    input,
-                    ..
-                },
-                ..
-            } => {
-                if let Some(keycode) = input.virtual_keycode {
-                    if input.state == ElementState::Pressed {
-                        match keycode {
-                            VirtualKeyCode::F7 => {
-                                println!("Direct Key Press: You pressed F7 directly (window event)!");
-                                return;
-                            }
-                            _ => {},
-                        }
-                    }
-                }
-            }
-            Event::DeviceEvent { 
-                event: DeviceEvent::Key(input),
-                ..
-            } => {
-                if let Some(keycode) = input.virtual_keycode {
-                    if input.state == ElementState::Pressed {
-                        match keycode {
-                            VirtualKeyCode::F7 => {
-                                println!("Device Key Press: You pressed F7 (device event)!");
-                                return;
-                            }
-                            _ => {},
-                        }
-                    }
-                }
-            }
-            _ => {}
         }
     });
 }
