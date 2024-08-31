@@ -17,8 +17,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load()?;
 
     // Run the GUI
-    if let Err(e) = run_gui(config) {
-        eprintln!("Error running GUI: {}", e);
+    match run_gui(config) {
+        Ok(_) => println!("Application closed gracefully"),
+        Err(e) => eprintln!("Error running GUI: {}", e),
     }
 
     Ok(())

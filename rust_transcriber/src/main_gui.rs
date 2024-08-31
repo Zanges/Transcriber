@@ -13,6 +13,7 @@ pub struct TranscriberGui {
 pub enum Message {
     LanguageSelected(String),
     OpenOptions,
+    Exit,
 }
 
 impl Application for TranscriberGui {
@@ -58,8 +59,18 @@ impl Application for TranscriberGui {
                 // TODO: Implement opening options dialog
                 println!("Open options clicked");
             }
+            Message::Exit => {
+                return Command::perform(async {}, |_| Message::Exit);
+            }
         }
         Command::none()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Message> {
+        iced::subscription::events().map(|event| match event {
+            iced::Event::Window(iced::window::Event::CloseRequested) => Message::Exit,
+            _ => Message::OpenOptions, // Ignore other events
+        })
     }
 
     fn view(&self) -> Element<Message> {
