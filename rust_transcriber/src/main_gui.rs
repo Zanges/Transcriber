@@ -33,11 +33,17 @@ impl Application for TranscriberGui {
             // Add more languages as needed
         ];
 
+        let selected_language = if languages.contains(&config.language) {
+            config.language.clone()
+        } else {
+            "Automatic".to_string() // Default to Automatic if the config language is not in the list
+        };
+
         (
             Self {
                 config,
                 languages,
-                selected_language: "Automatic".to_string(), // Default language
+                selected_language,
             },
             Command::none(),
         )
