@@ -14,6 +14,7 @@ pub enum Message {
     LanguageSelected(String),
     OpenOptions,
     Exit,
+    EventOccurred(iced::Event),
 }
 
 impl Application for TranscriberGui {
@@ -62,17 +63,18 @@ impl Application for TranscriberGui {
                 Command::none()
             }
             Message::Exit => iced::window::close(),
+            Message::EventOccurred(event) => {
+                if let iced::Event::Window(iced::window::Event::CloseRequested) = event {
+                    iced::window::close()
+                } else {
+                    Command::none()
+                }
+            }
         }
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        iced::subscription::events().filter_map(|event| {
-            if let iced::Event::Window(iced::window::Event::CloseRequested) = event {
-                Some(Message::Exit)
-            } else {
-                None
-            }
-        })
+        iced::subscription::events().map(Message::EventOccurred)
     }
 
     fn view(&self) -> Element<Message> {
