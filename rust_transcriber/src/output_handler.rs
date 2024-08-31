@@ -33,6 +33,7 @@ impl OutputHandler {
         thread::sleep(time::Duration::from_millis(self.key_event_delay));
     }
 
+    //TODO: Without a delay between each word, text is sometimes missing.
     pub fn type_text(&self, text: &str) {
         println!("Starting to type text ({} characters)", text.len());
         let words: Vec<&str> = text.split_whitespace().collect();
