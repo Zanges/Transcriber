@@ -1,6 +1,7 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
+use crate::openai_transcribe::OpenAITranscriber;
 use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
@@ -8,10 +9,11 @@ pub struct HotkeyHandler {
     hotkey: HotKey,
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
     audio_recorder: Arc<Mutex<AudioRecorder>>,
+    openai_transcriber: Arc<OpenAITranscriber>,
 }
 
 impl HotkeyHandler {
-    pub fn new(hotkey_str: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
@@ -20,7 +22,8 @@ impl HotkeyHandler {
             manager,
             hotkey,
             global_hotkey_channel: GlobalHotKeyEvent::receiver().clone(),
-            audio_recorder: Arc::new(Mutex::new(AudioRecorder::new())),
+            audio_recorder,
+            openai_transcriber,
         })
     }
 
@@ -47,6 +50,15 @@ impl HotkeyHandler {
                                 if let Ok(mut recorder) = self.audio_recorder.lock() {
                                     recorder.stop_recording();
                                     println!("Recording saved.");
+                                    
+                                    // Transcribe the recorded audio
+                                    let audio_file_path = "recorded_audio.wav"; // Assuming this is where the audio is saved
+                                    tokio::spawn(async move {
+                                        match self.openai_transcriber.transcribe(audio_file_path).await {
+                                            Ok(transcription) => println!("Transcription: {}", transcription),
+                                            Err(e) => eprintln!("Failed to transcribe: {}", e),
+                                        }
+                                    });
                                 }
                             }
                         }
