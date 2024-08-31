@@ -17,6 +17,7 @@ pub struct HotkeyHandler {
     output_handler: Arc<OutputHandler>,
 }
 
+// Implement Send for HotkeyHandler
 unsafe impl Send for HotkeyHandler {}
 
 impl HotkeyHandler {
