@@ -2,6 +2,7 @@ use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotK
 use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
+use crate::output_handler::OutputHandler;
 use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
@@ -11,10 +12,11 @@ pub struct HotkeyHandler {
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
     audio_recorder: Arc<Mutex<AudioRecorder>>,
     openai_transcriber: Arc<OpenAITranscriber>,
+    output_handler: Arc<OutputHandler>,
 }
 
 impl HotkeyHandler {
-    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>, output_handler: Arc<OutputHandler>) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
@@ -25,6 +27,7 @@ impl HotkeyHandler {
             global_hotkey_channel: GlobalHotKeyEvent::receiver().clone(),
             audio_recorder,
             openai_transcriber,
+            output_handler,
         })
     }
 
@@ -33,6 +36,7 @@ impl HotkeyHandler {
 
         let audio_recorder = self.audio_recorder.clone();
         let openai_transcriber = self.openai_transcriber.clone();
+        let output_handler = self.output_handler.clone();
 
         event_loop.run(move |event, _, control_flow| {
             *control_flow = winit::event_loop::ControlFlow::Poll;
@@ -58,10 +62,12 @@ impl HotkeyHandler {
                                         // Transcribe the recorded audio
                                         let transcriber = openai_transcriber.clone();
                                         let audio_file_path_str = audio_file_path.to_str().unwrap().to_string();
+                                        let output_handler = output_handler.clone();
                                         tokio::spawn(async move {
                                             match transcriber.transcribe(&audio_file_path_str).await {
                                                 Ok(transcription) => {
                                                     println!("Transcription: {}", transcription);
+                                                    output_handler.type_text(&transcription);
                                                     if let Err(e) = std::fs::remove_file(&audio_file_path_str) {
                                                         eprintln!("Failed to delete audio file: {}", e);
                                                     } else {
