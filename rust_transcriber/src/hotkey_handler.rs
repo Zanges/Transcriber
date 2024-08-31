@@ -2,18 +2,18 @@ use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotK
 use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-pub struct HotkeyHandler<'a> {
+pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
     hotkey: HotKey,
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
-    audio_recorder: &'a Arc<Mutex<AudioRecorder>>,
+    audio_recorder: Arc<Mutex<AudioRecorder>>,
     openai_transcriber: Arc<OpenAITranscriber>,
 }
 
-impl<'a> HotkeyHandler<'a> {
-    pub fn new(hotkey_str: &str, audio_recorder: &'a Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
+impl HotkeyHandler {
+    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
@@ -30,6 +30,9 @@ impl<'a> HotkeyHandler<'a> {
     pub fn handle_events(self, event_loop: EventLoop<()>) {
         println!("Press and hold {:?} to record audio. Release to stop recording. Press Ctrl+C to exit.", self.hotkey);
 
+        let audio_recorder = self.audio_recorder.clone();
+        let openai_transcriber = self.openai_transcriber.clone();
+
         event_loop.run(move |event, _, control_flow| {
             *control_flow = winit::event_loop::ControlFlow::Poll;
 
@@ -39,7 +42,7 @@ impl<'a> HotkeyHandler<'a> {
                         match hotkey_event.state {
                             HotKeyState::Pressed => {
                                 println!("Starting audio recording...");
-                                if let Ok(mut recorder) = self.audio_recorder.lock() {
+                                if let Ok(mut recorder) = audio_recorder.lock() {
                                     if let Err(e) = recorder.start_recording() {
                                         eprintln!("Failed to start recording: {}", e);
                                     }
@@ -47,14 +50,15 @@ impl<'a> HotkeyHandler<'a> {
                             }
                             HotKeyState::Released => {
                                 println!("Stopping audio recording...");
-                                if let Ok(mut recorder) = self.audio_recorder.lock() {
+                                if let Ok(mut recorder) = audio_recorder.lock() {
                                     recorder.stop_recording();
                                     println!("Recording saved.");
                                     
                                     // Transcribe the recorded audio
                                     let audio_file_path = "recorded_audio.wav"; // Assuming this is where the audio is saved
+                                    let transcriber = openai_transcriber.clone();
                                     tokio::spawn(async move {
-                                        match self.openai_transcriber.transcribe(audio_file_path).await {
+                                        match transcriber.transcribe(audio_file_path).await {
                                             Ok(transcription) => println!("Transcription: {}", transcription),
                                             Err(e) => eprintln!("Failed to transcribe: {}", e),
                                         }

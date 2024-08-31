@@ -22,10 +22,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Language: {}", config.language);
 
     let audio_recorder = Arc::new(Mutex::new(AudioRecorder::new()));
-    let openai_transcriber = OpenAITranscriber::new(config.openai_api_key.clone());
+    let openai_transcriber = Arc::new(OpenAITranscriber::new(config.openai_api_key.clone()));
 
     let event_loop = EventLoop::new();
-    let hotkey_handler = HotkeyHandler::new(&config.hotkey, &audio_recorder, Arc::new(openai_transcriber))?;
+    let hotkey_handler = HotkeyHandler::new(&config.hotkey, audio_recorder, openai_transcriber)?;
 
     hotkey_handler.handle_events(event_loop);
 
