@@ -66,11 +66,11 @@ impl Application for TranscriberGui {
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        iced::subscription::events().map(|event| {
+        iced::subscription::events().filter_map(|event| {
             if let iced::Event::Window(iced::window::Event::CloseRequested) = event {
-                Message::Exit
+                Some(Message::Exit)
             } else {
-                Message::OpenOptions
+                None
             }
         })
     }
