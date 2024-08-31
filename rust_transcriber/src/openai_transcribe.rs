@@ -1,6 +1,7 @@
 use reqwest::Client;
 use std::error::Error;
 use std::path::Path;
+use std::fs;
 
 pub struct OpenAITranscriber {
     api_key: String,
@@ -19,8 +20,10 @@ impl OpenAITranscriber {
         let file_path = Path::new(audio_file_path);
         let file_name = file_path.file_name().unwrap().to_str().unwrap();
 
-        let file_part = reqwest::multipart::Part::file(audio_file_path)?
-            .file_name(file_name.to_string());
+        let file_content = std::fs::read(audio_file_path)?;
+        let file_part = reqwest::multipart::Part::bytes(file_content)
+            .file_name(file_name.to_string())
+            .mime_str("audio/wav")?;
 
         let form = reqwest::multipart::Form::new()
             .text("model", "whisper-1")
