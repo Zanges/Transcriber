@@ -1,5 +1,6 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use tokio::sync::mpsc;
+use tokio::time::{sleep, Duration};
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
 use crate::output_handler::OutputHandler;
@@ -41,49 +42,52 @@ impl HotkeyHandler {
 
         loop {
             tokio::select! {
-                Some(hotkey_event) = self.global_hotkey_channel.recv_async() => {
-                    if hotkey_event.id == self.hotkey.id() {
-                        match hotkey_event.state {
-                            HotKeyState::Pressed => {
-                                println!("Starting audio recording...");
-                                if let Ok(mut recorder) = audio_recorder.lock() {
-                                    if let Err(e) = recorder.start_recording() {
-                                        eprintln!("Failed to start recording: {}", e);
+                _ = async {
+                    if let Ok(hotkey_event) = self.global_hotkey_channel.try_recv() {
+                        if hotkey_event.id == self.hotkey.id() {
+                            match hotkey_event.state {
+                                HotKeyState::Pressed => {
+                                    println!("Starting audio recording...");
+                                    if let Ok(mut recorder) = audio_recorder.lock() {
+                                        if let Err(e) = recorder.start_recording() {
+                                            eprintln!("Failed to start recording: {}", e);
+                                        }
                                     }
                                 }
-                            }
-                            HotKeyState::Released => {
-                                println!("Stopping audio recording...");
-                                if let Ok(mut recorder) = audio_recorder.lock() {
-                                    if let Some(audio_file_path) = recorder.stop_recording() {
-                                        println!("Recording saved to: {:?}", audio_file_path);
-                                        
-                                        // Transcribe the recorded audio
-                                        let transcriber = openai_transcriber.clone();
-                                        let audio_file_path_str = audio_file_path.to_str().unwrap().to_string();
-                                        let output_handler = output_handler.clone();
-                                        tokio::spawn(async move {
-                                            match transcriber.transcribe(&audio_file_path_str).await {
-                                                Ok(transcription) => {
-                                                    println!("Transcription: {}", transcription);
-                                                    output_handler.type_text(&transcription);
-                                                    if let Err(e) = std::fs::remove_file(&audio_file_path_str) {
-                                                        eprintln!("Failed to delete audio file: {}", e);
-                                                    } else {
-                                                        println!("Deleted audio file: {}", audio_file_path_str);
-                                                    }
-                                                },
-                                                Err(e) => eprintln!("Failed to transcribe: {}", e),
-                                            }
-                                        });
-                                    } else {
-                                        println!("No recording was in progress.");
+                                HotKeyState::Released => {
+                                    println!("Stopping audio recording...");
+                                    if let Ok(mut recorder) = audio_recorder.lock() {
+                                        if let Some(audio_file_path) = recorder.stop_recording() {
+                                            println!("Recording saved to: {:?}", audio_file_path);
+                                            
+                                            // Transcribe the recorded audio
+                                            let transcriber = openai_transcriber.clone();
+                                            let audio_file_path_str = audio_file_path.to_str().unwrap().to_string();
+                                            let output_handler = output_handler.clone();
+                                            tokio::spawn(async move {
+                                                match transcriber.transcribe(&audio_file_path_str).await {
+                                                    Ok(transcription) => {
+                                                        println!("Transcription: {}", transcription);
+                                                        output_handler.type_text(&transcription);
+                                                        if let Err(e) = std::fs::remove_file(&audio_file_path_str) {
+                                                            eprintln!("Failed to delete audio file: {}", e);
+                                                        } else {
+                                                            println!("Deleted audio file: {}", audio_file_path_str);
+                                                        }
+                                                    },
+                                                    Err(e) => eprintln!("Failed to transcribe: {}", e),
+                                                }
+                                            });
+                                        } else {
+                                            println!("No recording was in progress.");
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
+                    sleep(Duration::from_millis(10)).await;
+                } => {}
                 _ = rx.recv() => {
                     println!("Received exit signal. Stopping hotkey handler.");
                     break;
