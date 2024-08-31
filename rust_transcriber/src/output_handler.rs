@@ -22,48 +22,29 @@ impl OutputHandler {
 
     fn send_char(&self, c: char) {
         println!("Sending character: '{}'", c);
-        let mut input = INPUT {
-            type_: INPUT_KEYBOARD,
-            u: unsafe { std::mem::zeroed() },
-        };
-        
-        // Key down event
-        unsafe {
-            *input.u.ki_mut() = KEYBDINPUT {
-                wVk: 0,
-                wScan: c as u16,
-                dwFlags: 0x0004, // KEYEVENTF_UNICODE
-                time: 0,
-                dwExtraInfo: 0,
-            };
+        let mut inputs: [INPUT; 2] = unsafe { std::mem::zeroed() };
+
+        for (i, input) in inputs.iter_mut().enumerate() {
+            input.type_ = INPUT_KEYBOARD;
+            unsafe {
+                *input.u.ki_mut() = KEYBDINPUT {
+                    wVk: 0,
+                    wScan: c as u16,
+                    dwFlags: 0x0004 | if i == 1 { 0x0002 } else { 0 }, // KEYEVENTF_UNICODE | (KEYEVENTF_KEYUP for second input)
+                    time: 0,
+                    dwExtraInfo: 0,
+                };
+            }
         }
 
         let result = unsafe {
-            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
+            SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32)
         };
-        println!("SendInput (key down) result: {}", result);
+        println!("SendInput result: {}", result);
 
-        // Add a small delay between key down and key up
-        thread::sleep(time::Duration::from_millis(5));
+        // Add a small delay after sending the input
+        thread::sleep(time::Duration::from_millis(10));
 
-        // Key up event
-        unsafe {
-            *input.u.ki_mut() = KEYBDINPUT {
-                wVk: 0,
-                wScan: c as u16,
-                dwFlags: 0x0004 | 0x0002, // KEYEVENTF_UNICODE | KEYEVENTF_KEYUP
-                time: 0,
-                dwExtraInfo: 0,
-            };
-        }
-
-        let result = unsafe {
-            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
-        };
-        println!("SendInput (key up) result: {}", result);
-
-        // Check if the character was actually typed
-        // This is a placeholder - you'll need to implement a way to check the actual output
         println!("Character '{}' should have been typed", c);
     }
 }
