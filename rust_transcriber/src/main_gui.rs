@@ -25,6 +25,7 @@ impl Application for TranscriberGui {
 
     fn new(config: Config) -> (Self, Command<Message>) {
         let languages = vec![
+            "Automatic".to_string(),
             "English".to_string(),
             "Spanish".to_string(),
             "French".to_string(),
@@ -36,7 +37,7 @@ impl Application for TranscriberGui {
             Self {
                 config,
                 languages,
-                selected_language: "English".to_string(), // Default language
+                selected_language: "Automatic".to_string(), // Default language
             },
             Command::none(),
         )
