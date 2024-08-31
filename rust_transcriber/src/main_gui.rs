@@ -138,7 +138,6 @@ impl Application for TranscriberGui {
     }
 }
 
-pub fn run_gui(config: Config) -> Result<(), Box<dyn std::error::Error>> {
-    TranscriberGui::run(Settings::with_flags(config))?;
-    Ok(())
+pub fn run_gui(config: Config) -> Result<(), iced::Error> {
+    TranscriberGui::run(Settings::with_flags(config))
 }
