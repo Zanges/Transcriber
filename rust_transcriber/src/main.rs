@@ -8,19 +8,9 @@ mod main_gui;
 use config_handler::Config;
 use main_gui::run_gui;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ctrlc::set_handler(|| {
-        std::process::exit(0);
-    })?;
-
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load()?;
 
     // Run the GUI
-    match run_gui(config) {
-        Ok(_) => println!("Application closed gracefully"),
-        Err(e) => eprintln!("Error running GUI: {}", e),
-    }
-
-    Ok(())
+    run_gui(config)
 }

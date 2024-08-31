@@ -14,7 +14,6 @@ pub enum Message {
     LanguageSelected(String),
     OpenOptions,
     Exit,
-    Ignore,
 }
 
 impl Application for TranscriberGui {
@@ -55,23 +54,24 @@ impl Application for TranscriberGui {
                 if let Err(e) = self.config.save() {
                     eprintln!("Failed to save config: {}", e);
                 }
+                Command::none()
             }
             Message::OpenOptions => {
                 // TODO: Implement opening options dialog
                 println!("Open options clicked");
+                Command::none()
             }
-            Message::Exit => {
-                return Command::perform(async {}, |_| std::process::exit(0));
-            }
-            Message::Ignore => {}
+            Message::Exit => iced::window::close(),
         }
-        Command::none()
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        iced::subscription::events().map(|event| match event {
-            iced::Event::Window(iced::window::Event::CloseRequested) => Message::Exit,
-            _ => Message::Ignore,
+        iced::subscription::events().map(|event| {
+            if let iced::Event::Window(iced::window::Event::CloseRequested) = event {
+                Message::Exit
+            } else {
+                Message::OpenOptions
+            }
         })
     }
 
@@ -100,6 +100,7 @@ impl Application for TranscriberGui {
     }
 }
 
-pub fn run_gui(config: Config) -> iced::Result {
-    TranscriberGui::run(Settings::with_flags(config))
+pub fn run_gui(config: Config) -> Result<(), Box<dyn std::error::Error>> {
+    TranscriberGui::run(Settings::with_flags(config))?;
+    Ok(())
 }
