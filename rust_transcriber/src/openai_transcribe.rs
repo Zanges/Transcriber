@@ -1,7 +1,6 @@
 use reqwest::Client;
 use std::error::Error;
 use std::path::Path;
-use std::fs;
 
 pub struct OpenAITranscriber {
     api_key: String,
