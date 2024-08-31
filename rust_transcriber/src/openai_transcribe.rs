@@ -1,7 +1,6 @@
 use reqwest::Client;
 use std::error::Error;
-use tokio::fs::File;
-use tokio::io::AsyncReadExt;
+use std::path::Path;
 
 pub struct OpenAITranscriber {
     api_key: String,
@@ -17,13 +16,12 @@ impl OpenAITranscriber {
     }
 
     pub async fn transcribe(&self, audio_file_path: &str) -> Result<String, Box<dyn Error>> {
-        let mut file = File::open(audio_file_path).await?;
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).await?;
+        let file_path = Path::new(audio_file_path);
+        let file_name = file_path.file_name().unwrap().to_str().unwrap();
 
         let form = reqwest::multipart::Form::new()
             .text("model", "whisper-1")
-            .part("file", reqwest::multipart::Part::bytes(buffer).file_name("audio.wav"));
+            .file("file", audio_file_path)?;
 
         let response = self.client
             .post("https://api.openai.com/v1/audio/transcriptions")
