@@ -31,12 +31,12 @@ impl<'a> ConfigGui<'a> {
         }
     }
 
-    pub fn update(&mut self, message: ConfigMessage) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn update(&mut self, message: &ConfigMessage) -> Result<(), Box<dyn std::error::Error>> {
         match message {
-            ConfigMessage::HotkeyChanged(value) => self.hotkey = value,
-            ConfigMessage::OpenAIApiKeyChanged(value) => self.openai_api_key = value,
-            ConfigMessage::WordDelayChanged(value) => self.word_delay = value,
-            ConfigMessage::KeyEventDelayChanged(value) => self.key_event_delay = value,
+            ConfigMessage::HotkeyChanged(value) => self.hotkey = value.clone(),
+            ConfigMessage::OpenAIApiKeyChanged(value) => self.openai_api_key = value.clone(),
+            ConfigMessage::WordDelayChanged(value) => self.word_delay = value.clone(),
+            ConfigMessage::KeyEventDelayChanged(value) => self.key_event_delay = value.clone(),
             ConfigMessage::SaveConfig => {
                 self.config.hotkey = self.hotkey.clone();
                 self.config.openai_api_key = self.openai_api_key.clone();

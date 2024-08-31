@@ -82,7 +82,7 @@ impl Application for TranscriberGui {
             }
             Message::ConfigMessage(config_message) => {
                 if let Some(config_gui) = &mut self.config_gui {
-                    if let Err(e) = config_gui.update(config_message) {
+                    if let Err(e) = config_gui.update(&config_message) {
                         eprintln!("Failed to update config: {}", e);
                     }
                     if let ConfigMessage::SaveConfig = config_message {
