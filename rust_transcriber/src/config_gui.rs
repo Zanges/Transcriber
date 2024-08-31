@@ -1,5 +1,5 @@
 use iced::widget::{button, column, container, row, text, text_input};
-use iced::{Element, Length};
+use iced::{Element, Length, Alignment};
 
 use crate::config_handler::Config;
 
@@ -51,21 +51,25 @@ impl<'a> ConfigGui<'a> {
     pub fn view(&self) -> Element<ConfigMessage> {
         let content = column![
             row![
-                text("Hotkey:").width(Length::Units(150)),
-                text_input("Enter hotkey", &self.hotkey, ConfigMessage::HotkeyChanged)
-            ].spacing(10),
+                text("Hotkey:").width(Length::Fixed(150)),
+                text_input("Enter hotkey", &self.hotkey)
+                    .on_input(ConfigMessage::HotkeyChanged)
+            ].spacing(10).align_items(Alignment::Center),
             row![
-                text("OpenAI API Key:").width(Length::Units(150)),
-                text_input("Enter API key", &self.openai_api_key, ConfigMessage::OpenAIApiKeyChanged)
-            ].spacing(10),
+                text("OpenAI API Key:").width(Length::Fixed(150)),
+                text_input("Enter API key", &self.openai_api_key)
+                    .on_input(ConfigMessage::OpenAIApiKeyChanged)
+            ].spacing(10).align_items(Alignment::Center),
             row![
-                text("Word Delay (ms):").width(Length::Units(150)),
-                text_input("Enter word delay", &self.word_delay, ConfigMessage::WordDelayChanged)
-            ].spacing(10),
+                text("Word Delay (ms):").width(Length::Fixed(150)),
+                text_input("Enter word delay", &self.word_delay)
+                    .on_input(ConfigMessage::WordDelayChanged)
+            ].spacing(10).align_items(Alignment::Center),
             row![
-                text("Key Event Delay (ms):").width(Length::Units(150)),
-                text_input("Enter key event delay", &self.key_event_delay, ConfigMessage::KeyEventDelayChanged)
-            ].spacing(10),
+                text("Key Event Delay (ms):").width(Length::Fixed(150)),
+                text_input("Enter key event delay", &self.key_event_delay)
+                    .on_input(ConfigMessage::KeyEventDelayChanged)
+            ].spacing(10).align_items(Alignment::Center),
             button("Save Configuration").on_press(ConfigMessage::SaveConfig)
         ]
         .spacing(20);
