@@ -5,6 +5,7 @@ use crate::openai_transcribe::OpenAITranscriber;
 use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
+    #[allow(dead_code)]
     manager: GlobalHotKeyManager,
     hotkey: HotKey,
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
