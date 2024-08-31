@@ -7,6 +7,7 @@ pub struct Config {
     pub hotkey: String,
     pub language: String,
     pub openai_api_key: String,
+    pub keypress_delay: u64,
 }
 
 impl Default for Config {
@@ -15,6 +16,7 @@ impl Default for Config {
             hotkey: "F7".to_string(),
             language: "en".to_string(),
             openai_api_key: String::new(),
+            keypress_delay: 10,
         }
     }
 }
