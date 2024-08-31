@@ -19,6 +19,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let hotkey_handler = HotkeyHandler::new(&config.hotkey)?;
 
     // Run the GUI
-    run_gui(config, audio_recorder, openai_transcriber, hotkey_handler)
+    run_gui(config)
 }
 mod config_gui;
