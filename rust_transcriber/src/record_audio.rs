@@ -9,6 +9,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct AudioRecorder {
     is_recording: Arc<AtomicBool>,
     stream: Option<cpal::Stream>,
+    current_file_path: Arc<Mutex<Option<PathBuf>>>,
 }
 
 impl AudioRecorder {
@@ -16,6 +17,7 @@ impl AudioRecorder {
         AudioRecorder {
             is_recording: Arc::new(AtomicBool::new(false)),
             stream: None,
+            current_file_path: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -34,6 +36,7 @@ impl AudioRecorder {
 
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
         let file_path = temp_dir.join(format!("recorded_audio_{}.wav", timestamp));
+        *self.current_file_path.lock().unwrap() = Some(file_path.clone());
         let spec = hound::WavSpec {
             channels: config.channels() as _,
             sample_rate: config.sample_rate().0 as _,
@@ -82,9 +85,9 @@ impl AudioRecorder {
         Ok(())
     }
 
-    pub fn stop_recording(&mut self) {
+    pub fn stop_recording(&mut self) -> Option<PathBuf> {
         if !self.is_recording.load(Ordering::SeqCst) {
-            return;
+            return None;
         }
 
         self.is_recording.store(false, Ordering::SeqCst);
@@ -92,6 +95,9 @@ impl AudioRecorder {
             drop(stream);
         }
         println!("Recording stopped and saved.");
+        
+        let file_path = self.current_file_path.lock().unwrap().take();
+        file_path
     }
 }
 

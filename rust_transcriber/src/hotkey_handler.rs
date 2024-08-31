@@ -51,18 +51,21 @@ impl HotkeyHandler {
                             HotKeyState::Released => {
                                 println!("Stopping audio recording...");
                                 if let Ok(mut recorder) = audio_recorder.lock() {
-                                    recorder.stop_recording();
-                                    println!("Recording saved.");
-                                    
-                                    // Transcribe the recorded audio
-                                    let audio_file_path = "recorded_audio.wav"; // Assuming this is where the audio is saved
-                                    let transcriber = openai_transcriber.clone();
-                                    tokio::spawn(async move {
-                                        match transcriber.transcribe(audio_file_path).await {
-                                            Ok(transcription) => println!("Transcription: {}", transcription),
-                                            Err(e) => eprintln!("Failed to transcribe: {}", e),
-                                        }
-                                    });
+                                    if let Some(audio_file_path) = recorder.stop_recording() {
+                                        println!("Recording saved to: {:?}", audio_file_path);
+                                        
+                                        // Transcribe the recorded audio
+                                        let transcriber = openai_transcriber.clone();
+                                        let audio_file_path_str = audio_file_path.to_str().unwrap().to_string();
+                                        tokio::spawn(async move {
+                                            match transcriber.transcribe(&audio_file_path_str).await {
+                                                Ok(transcription) => println!("Transcription: {}", transcription),
+                                                Err(e) => eprintln!("Failed to transcribe: {}", e),
+                                            }
+                                        });
+                                    } else {
+                                        println!("No recording was in progress.");
+                                    }
                                 }
                             }
                         }
