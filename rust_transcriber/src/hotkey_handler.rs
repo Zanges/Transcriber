@@ -16,7 +16,7 @@ pub struct HotkeyHandler {
 }
 
 impl HotkeyHandler {
-    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>, output_handler: Arc<OutputHandler>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(hotkey_str: &str, audio_recorder: Option<Arc<Mutex<AudioRecorder>>>, openai_transcriber: Option<Arc<OpenAITranscriber>>, output_handler: Option<Arc<OutputHandler>>) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
@@ -25,9 +25,9 @@ impl HotkeyHandler {
             manager,
             hotkey,
             global_hotkey_channel: GlobalHotKeyEvent::receiver().clone(),
-            audio_recorder,
-            openai_transcriber,
-            output_handler,
+            audio_recorder: audio_recorder.unwrap_or_else(|| Arc::new(Mutex::new(AudioRecorder::new(&Config::default())))),
+            openai_transcriber: openai_transcriber.unwrap_or_else(|| Arc::new(OpenAITranscriber::new(String::new()))),
+            output_handler: output_handler.unwrap_or_else(|| Arc::new(OutputHandler::new(0, 0))),
         })
     }
 

@@ -14,11 +14,12 @@ use hotkey_handler::HotkeyHandler;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load()?;
     
-    let audio_recorder = AudioRecorder::new(&config)?;
-    let openai_transcriber = OpenAITranscriber::new(&config.openai_api_key)?;
-    let hotkey_handler = HotkeyHandler::new(&config.hotkey)?;
+    let audio_recorder = Arc::new(Mutex::new(AudioRecorder::new(&config)));
+    let openai_transcriber = Arc::new(OpenAITranscriber::new(config.openai_api_key.clone()));
+    let output_handler = Arc::new(OutputHandler::new(config.word_delay, config.key_event_delay));
+    let hotkey_handler = HotkeyHandler::new(&config.hotkey, audio_recorder.clone(), openai_transcriber.clone(), output_handler.clone())?;
 
     // Run the GUI
-    run_gui(config)
+    Ok(run_gui(config)?)
 }
 mod config_gui;
