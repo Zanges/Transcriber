@@ -3,6 +3,7 @@ use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
 use std::sync::{Arc, Mutex};
+use std::fs;
 
 pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
@@ -59,7 +60,14 @@ impl HotkeyHandler {
                                         let audio_file_path_str = audio_file_path.to_str().unwrap().to_string();
                                         tokio::spawn(async move {
                                             match transcriber.transcribe(&audio_file_path_str).await {
-                                                Ok(transcription) => println!("Transcription: {}", transcription),
+                                                Ok(transcription) => {
+                                                    println!("Transcription: {}", transcription);
+                                                    if let Err(e) = std::fs::remove_file(&audio_file_path_str) {
+                                                        eprintln!("Failed to delete audio file: {}", e);
+                                                    } else {
+                                                        println!("Deleted audio file: {}", audio_file_path_str);
+                                                    }
+                                                },
                                                 Err(e) => eprintln!("Failed to transcribe: {}", e),
                                             }
                                         });
