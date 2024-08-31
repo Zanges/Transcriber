@@ -21,6 +21,7 @@ impl OutputHandler {
     }
 
     fn send_char(&self, c: char) {
+        println!("Sending character: '{}'", c);
         let mut input = INPUT {
             type_: INPUT_KEYBOARD,
             u: unsafe { std::mem::zeroed() },
@@ -36,9 +37,10 @@ impl OutputHandler {
             };
         }
 
-        unsafe {
-            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32);
-        }
+        let result = unsafe {
+            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
+        };
+        println!("SendInput (key down) result: {}", result);
 
         // Key up event
         unsafe {
@@ -51,8 +53,13 @@ impl OutputHandler {
             };
         }
 
-        unsafe {
-            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32);
-        }
+        let result = unsafe {
+            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
+        };
+        println!("SendInput (key up) result: {}", result);
+
+        // Check if the character was actually typed
+        // This is a placeholder - you'll need to implement a way to check the actual output
+        println!("Character '{}' should have been typed", c);
     }
 }
