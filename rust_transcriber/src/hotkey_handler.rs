@@ -2,7 +2,7 @@ use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotK
 use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
     manager: GlobalHotKeyManager,
