@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let openai_transcriber = OpenAITranscriber::new(config.openai_api_key.clone());
 
     let event_loop = EventLoop::new();
-    let hotkey_handler = HotkeyHandler::new(&config.hotkey, audio_recorder.clone(), Arc::new(openai_transcriber))?;
+    let hotkey_handler = HotkeyHandler::new(&config.hotkey, &audio_recorder, Arc::new(openai_transcriber))?;
 
     hotkey_handler.handle_events(event_loop);
 

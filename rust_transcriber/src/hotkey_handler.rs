@@ -4,16 +4,16 @@ use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
 use std::sync::{Arc, Mutex};
 
-pub struct HotkeyHandler {
+pub struct HotkeyHandler<'a> {
     manager: GlobalHotKeyManager,
     hotkey: HotKey,
     global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
-    audio_recorder: Arc<Mutex<AudioRecorder>>,
+    audio_recorder: &'a Arc<Mutex<AudioRecorder>>,
     openai_transcriber: Arc<OpenAITranscriber>,
 }
 
-impl HotkeyHandler {
-    pub fn new(hotkey_str: &str, audio_recorder: Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
+impl<'a> HotkeyHandler<'a> {
+    pub fn new(hotkey_str: &str, audio_recorder: &'a Arc<Mutex<AudioRecorder>>, openai_transcriber: Arc<OpenAITranscriber>) -> Result<Self, Box<dyn std::error::Error>> {
         let manager = GlobalHotKeyManager::new()?;
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
