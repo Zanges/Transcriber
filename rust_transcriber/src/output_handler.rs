@@ -3,11 +3,13 @@ use winapi::um::winuser::{INPUT, INPUT_KEYBOARD, KEYBDINPUT, SendInput};
 use std::{thread, time};
 pub struct OutputHandler {
     keypress_delay: u64,
+    word_delay: u64,
+    key_event_delay: u64,
 }
 
 impl OutputHandler {
-    pub fn new(keypress_delay: u64) -> Self {
-        OutputHandler { keypress_delay }
+    pub fn new(keypress_delay: u64, word_delay: u64, key_event_delay: u64) -> Self {
+        OutputHandler { keypress_delay, word_delay, key_event_delay }
     }
 
     fn send_char(&self, c: char) {
@@ -28,16 +30,16 @@ impl OutputHandler {
             SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
         };
 
-        // Add a small delay after sending the input
-        thread::sleep(time::Duration::from_millis(10));
+        // Add a configurable delay after sending the input
+        thread::sleep(time::Duration::from_millis(self.key_event_delay));
     }
 
     pub fn type_text(&self, text: &str) {
         println!("Starting to type text ({} characters)", text.len());
         let words: Vec<&str> = text.split_whitespace().collect();
         for (i, word) in words.iter().enumerate() {
-            // Add a delay before each word
-            thread::sleep(time::Duration::from_millis(50));
+            // Add a configurable delay before each word
+            thread::sleep(time::Duration::from_millis(self.word_delay));
             
             for c in word.chars() {
                 self.send_char(c);

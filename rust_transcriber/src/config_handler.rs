@@ -8,6 +8,8 @@ pub struct Config {
     pub language: String,
     pub openai_api_key: String,
     pub keypress_delay: u64,
+    pub word_delay: u64,
+    pub key_event_delay: u64,
 }
 
 impl Default for Config {
@@ -17,6 +19,8 @@ impl Default for Config {
             language: "en".to_string(),
             openai_api_key: String::new(),
             keypress_delay: 12,
+            word_delay: 50,
+            key_event_delay: 10,
         }
     }
 }
