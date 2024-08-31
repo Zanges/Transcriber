@@ -11,10 +11,13 @@ impl OutputHandler {
     }
 
     pub fn type_text(&self, text: &str) {
-        for c in text.chars() {
+        println!("Starting to type text with {} characters", text.len());
+        for (i, c) in text.chars().enumerate() {
+            println!("Typing character {} of {}: '{}'", i + 1, text.len(), c);
             self.send_char(c);
             thread::sleep(time::Duration::from_millis(self.keypress_delay));
         }
+        println!("Finished typing text");
     }
 
     fn send_char(&self, c: char) {
