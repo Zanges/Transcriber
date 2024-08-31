@@ -2,14 +2,13 @@
 use winapi::um::winuser::{INPUT, INPUT_KEYBOARD, KEYBDINPUT, SendInput};
 use std::{thread, time};
 pub struct OutputHandler {
-    keypress_delay: u64,
     word_delay: u64,
     key_event_delay: u64,
 }
 
 impl OutputHandler {
-    pub fn new(keypress_delay: u64, word_delay: u64, key_event_delay: u64) -> Self {
-        OutputHandler { keypress_delay, word_delay, key_event_delay }
+    pub fn new(word_delay: u64, key_event_delay: u64) -> Self {
+        OutputHandler { word_delay, key_event_delay }
     }
 
     fn send_char(&self, c: char) {
@@ -47,7 +46,6 @@ impl OutputHandler {
             if i < words.len() - 1 {
                 self.send_char(' ');
             }
-            thread::sleep(time::Duration::from_millis(self.keypress_delay));
         }
         println!("Finished typing text");
     }
