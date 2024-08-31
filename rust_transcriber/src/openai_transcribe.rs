@@ -19,9 +19,12 @@ impl OpenAITranscriber {
         let file_path = Path::new(audio_file_path);
         let file_name = file_path.file_name().unwrap().to_str().unwrap();
 
+        let file_part = reqwest::multipart::Part::file(audio_file_path)?
+            .file_name(file_name.to_string());
+
         let form = reqwest::multipart::Form::new()
             .text("model", "whisper-1")
-            .file("file", audio_file_path)?;
+            .part("file", file_part);
 
         let response = self.client
             .post("https://api.openai.com/v1/audio/transcriptions")
