@@ -14,6 +14,7 @@ pub enum Message {
     LanguageSelected(String),
     OpenOptions,
     Exit,
+    Ignore,
 }
 
 impl Application for TranscriberGui {
@@ -60,8 +61,9 @@ impl Application for TranscriberGui {
                 println!("Open options clicked");
             }
             Message::Exit => {
-                return Command::perform(async {}, |_| Message::Exit);
+                return Command::perform(async {}, |_| std::process::exit(0));
             }
+            Message::Ignore => {}
         }
         Command::none()
     }
@@ -69,7 +71,7 @@ impl Application for TranscriberGui {
     fn subscription(&self) -> iced::Subscription<Message> {
         iced::subscription::events().map(|event| match event {
             iced::Event::Window(iced::window::Event::CloseRequested) => Message::Exit,
-            _ => Message::OpenOptions, // Ignore other events
+            _ => Message::Ignore,
         })
     }
 
