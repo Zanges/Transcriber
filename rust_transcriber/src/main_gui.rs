@@ -1,5 +1,6 @@
 use iced::widget::{button, column, container, pick_list, row, text};
 use iced::{executor, Application, Command, Element, Settings, Theme};
+use tokio::sync::mpsc;
 
 use crate::config_handler::Config;
 use crate::config_gui::{ConfigGui, ConfigMessage};
@@ -9,6 +10,7 @@ pub struct TranscriberGui {
     languages: Vec<String>,
     selected_language: String,
     config_gui: Option<ConfigGui<'static>>,
+    exit_sender: mpsc::Sender<()>,
 }
 
 #[derive(Debug, Clone)]
@@ -25,9 +27,10 @@ impl Application for TranscriberGui {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
-    type Flags = Config;
+    type Flags = (Config, mpsc::Sender<()>);
 
-    fn new(config: Config) -> (Self, Command<Message>) {
+    fn new(flags: Self::Flags) -> (Self, Command<Message>) {
+        let (config, exit_sender) = flags;
         let languages = vec![
             "Automatic".to_string(),
             "English".to_string(),
@@ -49,6 +52,7 @@ impl Application for TranscriberGui {
                 languages,
                 selected_language,
                 config_gui: None,
+                exit_sender,
             },
             Command::none(),
         )
@@ -91,9 +95,13 @@ impl Application for TranscriberGui {
                 }
                 Command::none()
             }
-            Message::Exit => iced::window::close(),
+            Message::Exit => {
+                let _ = self.exit_sender.try_send(());
+                iced::window::close()
+            }
             Message::EventOccurred(event) => {
                 if let iced::Event::Window(iced::window::Event::CloseRequested) = event {
+                    let _ = self.exit_sender.try_send(());
                     iced::window::close()
                 } else {
                     Command::none()
@@ -138,6 +146,6 @@ impl Application for TranscriberGui {
     }
 }
 
-pub fn run_gui(config: Config) -> Result<(), iced::Error> {
-    TranscriberGui::run(Settings::with_flags(config))
+pub async fn run_gui(config: Config, exit_sender: mpsc::Sender<()>) -> Result<(), iced::Error> {
+    TranscriberGui::run(Settings::with_flags((config, exit_sender)))
 }

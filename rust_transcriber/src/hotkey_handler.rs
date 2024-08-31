@@ -1,5 +1,5 @@
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
-use winit::event_loop::EventLoop;
+use tokio::sync::mpsc;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
 use crate::output_handler::OutputHandler;
@@ -32,18 +32,16 @@ impl HotkeyHandler {
         })
     }
 
-    pub fn handle_events(self, event_loop: EventLoop<()>) {
-        println!("Press and hold {:?} to record audio. Release to stop recording. Press Ctrl+C to exit.", self.hotkey);
+    pub async fn handle_events(self, mut rx: mpsc::Receiver<()>) {
+        println!("Press and hold {:?} to record audio. Release to stop recording.", self.hotkey);
 
         let audio_recorder = self.audio_recorder.clone();
         let openai_transcriber = self.openai_transcriber.clone();
         let output_handler = self.output_handler.clone();
 
-        event_loop.run(move |event, _, control_flow| {
-            *control_flow = winit::event_loop::ControlFlow::Poll;
-
-            if let winit::event::Event::NewEvents(_) = event {
-                if let Ok(hotkey_event) = self.global_hotkey_channel.try_recv() {
+        loop {
+            tokio::select! {
+                Some(hotkey_event) = self.global_hotkey_channel.recv_async() => {
                     if hotkey_event.id == self.hotkey.id() {
                         match hotkey_event.state {
                             HotKeyState::Pressed => {
@@ -86,7 +84,11 @@ impl HotkeyHandler {
                         }
                     }
                 }
+                _ = rx.recv() => {
+                    println!("Received exit signal. Stopping hotkey handler.");
+                    break;
+                }
             }
-        });
+        }
     }
 }
