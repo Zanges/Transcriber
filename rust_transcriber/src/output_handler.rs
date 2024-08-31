@@ -36,6 +36,9 @@ impl OutputHandler {
         println!("Starting to type text ({} characters)", text.len());
         let words: Vec<&str> = text.split_whitespace().collect();
         for (i, word) in words.iter().enumerate() {
+            // Add a delay before each word
+            thread::sleep(time::Duration::from_millis(50));
+            
             for c in word.chars() {
                 self.send_char(c);
             }
