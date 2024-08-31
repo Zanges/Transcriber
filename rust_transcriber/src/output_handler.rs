@@ -33,7 +33,7 @@ impl OutputHandler {
         thread::sleep(time::Duration::from_millis(self.key_event_delay));
     }
 
-    pub fn type_text(&self, text: &str) {
+    pub fn type_text(&self, text: &str) { //TODO: sometimes the text is not typed correctly, need to fix
         println!("Starting to type text ({} characters)", text.len());
         let words: Vec<&str> = text.split_whitespace().collect();
         for (i, word) in words.iter().enumerate() {
