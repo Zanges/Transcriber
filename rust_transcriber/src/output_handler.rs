@@ -1,5 +1,5 @@
-use std::ptr::null_mut;
-use winapi::um::winuser::{INPUT_u, INPUT, INPUT_KEYBOARD, KEYBDINPUT, SendInput, VK_RETURN};
+
+use winapi::um::winuser::{INPUT, INPUT_KEYBOARD, KEYBDINPUT, SendInput};
 use std::{thread, time};
 pub struct OutputHandler {
     keypress_delay: u64,
