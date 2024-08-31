@@ -27,6 +27,7 @@ impl OutputHandler {
             u: unsafe { std::mem::zeroed() },
         };
         
+        // Key down event
         unsafe {
             *input.u.ki_mut() = KEYBDINPUT {
                 wVk: 0,
@@ -41,6 +42,9 @@ impl OutputHandler {
             SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
         };
         println!("SendInput (key down) result: {}", result);
+
+        // Add a small delay between key down and key up
+        thread::sleep(time::Duration::from_millis(5));
 
         // Key up event
         unsafe {
