@@ -2,12 +2,14 @@ mod hotkey_handler;
 mod config_handler;
 mod record_audio;
 mod openai_transcribe;
+mod output_handler;
 
 use winit::event_loop::EventLoop;
 use hotkey_handler::HotkeyHandler;
 use config_handler::Config;
 use record_audio::AudioRecorder;
 use openai_transcribe::OpenAITranscriber;
+use output_handler::OutputHandler;
 use std::sync::{Arc, Mutex};
 
 #[tokio::main]
@@ -23,9 +25,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let audio_recorder = Arc::new(Mutex::new(AudioRecorder::new()));
     let openai_transcriber = Arc::new(OpenAITranscriber::new(config.openai_api_key.clone()));
+    let output_handler = Arc::new(OutputHandler::new());
 
     let event_loop = EventLoop::new();
-    let hotkey_handler = HotkeyHandler::new(&config.hotkey, audio_recorder, openai_transcriber)?;
+    let hotkey_handler = HotkeyHandler::new(&config.hotkey, audio_recorder, openai_transcriber, output_handler)?;
 
     hotkey_handler.handle_events(event_loop);
 
