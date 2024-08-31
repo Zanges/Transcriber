@@ -2,7 +2,6 @@ mod hotkey_handler;
 mod config_handler;
 mod record_audio;
 mod openai_transcribe;
-
 mod output_handler;
 
 use winit::event_loop::EventLoop;
