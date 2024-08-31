@@ -13,7 +13,7 @@ pub struct AudioRecorder {
 }
 
 impl AudioRecorder {
-    pub fn new() -> Self {
+    pub fn new(config: &Config) -> Self {
         AudioRecorder {
             is_recording: Arc::new(AtomicBool::new(false)),
             stream: None,
@@ -120,3 +120,4 @@ where
         }
     }
 }
+use crate::config_handler::Config;
