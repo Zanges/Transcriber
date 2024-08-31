@@ -5,7 +5,9 @@ mod openai_transcribe;
 mod output_handler;
 mod main_gui;
 
+use std::sync::{Arc, Mutex};
 use config_handler::Config;
+use output_handler::OutputHandler;
 use main_gui::run_gui;
 use record_audio::AudioRecorder;
 use openai_transcribe::OpenAITranscriber;

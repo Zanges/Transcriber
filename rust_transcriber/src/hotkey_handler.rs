@@ -3,6 +3,7 @@ use winit::event_loop::EventLoop;
 use crate::record_audio::AudioRecorder;
 use crate::openai_transcribe::OpenAITranscriber;
 use crate::output_handler::OutputHandler;
+use crate::config_handler::Config;
 use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
