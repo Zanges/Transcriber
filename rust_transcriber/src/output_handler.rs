@@ -1,21 +1,19 @@
 use std::ptr::null_mut;
 use winapi::um::winuser::{INPUT_u, INPUT, INPUT_KEYBOARD, KEYBDINPUT, SendInput, VK_RETURN};
 use std::{thread, time};
-use crate::config_handler::Config;
-
 pub struct OutputHandler {
-    config: Config,
+    keypress_delay: u64,
 }
 
 impl OutputHandler {
-    pub fn new(config: Config) -> Self {
-        OutputHandler { config }
+    pub fn new(keypress_delay: u64) -> Self {
+        OutputHandler { keypress_delay }
     }
 
     pub fn type_text(&self, text: &str) {
         for c in text.chars() {
             self.send_char(c);
-            thread::sleep(time::Duration::from_millis(self.config.keypress_delay));
+            thread::sleep(time::Duration::from_millis(self.keypress_delay));
         }
     }
 
