@@ -8,7 +8,7 @@ pub struct TranscriberGui {
     config: Config,
     languages: Vec<String>,
     selected_language: String,
-    config_gui: Option<ConfigGui>,
+    config_gui: Option<ConfigGui<'static>>,
 }
 
 #[derive(Debug, Clone)]
@@ -70,7 +70,10 @@ impl Application for TranscriberGui {
                 Command::none()
             }
             Message::OpenOptions => {
-                self.config_gui = Some(ConfigGui::new(self.config.clone()));
+                let config_ptr: *mut Config = &mut self.config;
+                unsafe {
+                    self.config_gui = Some(ConfigGui::new(&mut *config_ptr));
+                }
                 Command::none()
             }
             Message::CloseOptions => {
@@ -83,7 +86,7 @@ impl Application for TranscriberGui {
                         eprintln!("Failed to update config: {}", e);
                     }
                     if let ConfigMessage::SaveConfig = config_message {
-                        self.config = config_gui.config.clone();
+                        // No need to clone, as we're directly modifying the original config
                     }
                 }
                 Command::none()

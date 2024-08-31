@@ -12,16 +12,16 @@ pub enum ConfigMessage {
     SaveConfig,
 }
 
-pub struct ConfigGui {
-    config: Config,
+pub struct ConfigGui<'a> {
+    config: &'a mut Config,
     hotkey: String,
     openai_api_key: String,
     word_delay: String,
     key_event_delay: String,
 }
 
-impl ConfigGui {
-    pub fn new(config: Config) -> Self {
+impl<'a> ConfigGui<'a> {
+    pub fn new(config: &'a mut Config) -> Self {
         Self {
             hotkey: config.hotkey.clone(),
             openai_api_key: config.openai_api_key.clone(),
