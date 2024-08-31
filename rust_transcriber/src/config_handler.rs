@@ -16,7 +16,7 @@ impl Default for Config {
             hotkey: "F7".to_string(),
             language: "en".to_string(),
             openai_api_key: String::new(),
-            keypress_delay: 10,
+            keypress_delay: 12,
         }
     }
 }
