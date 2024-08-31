@@ -9,24 +9,26 @@ use std::sync::{Arc, Mutex};
 
 pub struct HotkeyHandler {
     #[allow(dead_code)]
-    manager: GlobalHotKeyManager,
+    manager: Arc<GlobalHotKeyManager>,
     hotkey: HotKey,
-    global_hotkey_channel: crossbeam_channel::Receiver<GlobalHotKeyEvent>,
+    global_hotkey_channel: Arc<crossbeam_channel::Receiver<GlobalHotKeyEvent>>,
     audio_recorder: Arc<Mutex<AudioRecorder>>,
     openai_transcriber: Arc<OpenAITranscriber>,
     output_handler: Arc<OutputHandler>,
 }
 
+unsafe impl Send for HotkeyHandler {}
+
 impl HotkeyHandler {
     pub fn new(hotkey_str: &str, audio_recorder: Option<Arc<Mutex<AudioRecorder>>>, openai_transcriber: Option<Arc<OpenAITranscriber>>, output_handler: Option<Arc<OutputHandler>>) -> Result<Self, Box<dyn std::error::Error>> {
-        let manager = GlobalHotKeyManager::new()?;
+        let manager = Arc::new(GlobalHotKeyManager::new()?);
         let hotkey = HotKey::new(None, hotkey_str.parse()?);
         manager.register(hotkey)?;
 
         Ok(Self {
             manager,
             hotkey,
-            global_hotkey_channel: GlobalHotKeyEvent::receiver().clone(),
+            global_hotkey_channel: Arc::new(GlobalHotKeyEvent::receiver().clone()),
             audio_recorder: audio_recorder.unwrap_or_else(|| Arc::new(Mutex::new(AudioRecorder::new(&Config::default())))),
             openai_transcriber: openai_transcriber.unwrap_or_else(|| Arc::new(OpenAITranscriber::new(String::new()))),
             output_handler: output_handler.unwrap_or_else(|| Arc::new(OutputHandler::new(0, 0))),
@@ -39,11 +41,12 @@ impl HotkeyHandler {
         let audio_recorder = self.audio_recorder.clone();
         let openai_transcriber = self.openai_transcriber.clone();
         let output_handler = self.output_handler.clone();
+        let global_hotkey_channel = Arc::clone(&self.global_hotkey_channel);
 
         loop {
             tokio::select! {
                 _ = async {
-                    if let Ok(hotkey_event) = self.global_hotkey_channel.try_recv() {
+                    if let Ok(hotkey_event) = global_hotkey_channel.try_recv() {
                         if hotkey_event.id == self.hotkey.id() {
                             match hotkey_event.state {
                                 HotKeyState::Pressed => {
