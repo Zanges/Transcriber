@@ -22,23 +22,21 @@ impl OutputHandler {
 
     fn send_char(&self, c: char) {
         println!("Sending character: '{}'", c);
-        let mut inputs: [INPUT; 2] = unsafe { std::mem::zeroed() };
+        let mut input: INPUT = unsafe { std::mem::zeroed() };
 
-        for (i, input) in inputs.iter_mut().enumerate() {
-            input.type_ = INPUT_KEYBOARD;
-            unsafe {
-                *input.u.ki_mut() = KEYBDINPUT {
-                    wVk: 0,
-                    wScan: c as u16,
-                    dwFlags: 0x0004 | if i == 1 { 0x0002 } else { 0 }, // KEYEVENTF_UNICODE | (KEYEVENTF_KEYUP for second input)
-                    time: 0,
-                    dwExtraInfo: 0,
-                };
-            }
+        input.type_ = INPUT_KEYBOARD;
+        unsafe {
+            *input.u.ki_mut() = KEYBDINPUT {
+                wVk: 0,
+                wScan: c as u16,
+                dwFlags: 0x0004, // KEYEVENTF_UNICODE
+                time: 0,
+                dwExtraInfo: 0,
+            };
         }
 
         let result = unsafe {
-            SendInput(2, inputs.as_mut_ptr(), std::mem::size_of::<INPUT>() as i32)
+            SendInput(1, &mut input, std::mem::size_of::<INPUT>() as i32)
         };
         println!("SendInput result: {}", result);
 
@@ -46,5 +44,24 @@ impl OutputHandler {
         thread::sleep(time::Duration::from_millis(10));
 
         println!("Character '{}' should have been typed", c);
+    }
+
+    pub fn type_text(&self, text: &str) {
+        println!("Starting to type text with {} characters", text.len());
+        let words: Vec<&str> = text.split_whitespace().collect();
+        for (i, word) in words.iter().enumerate() {
+            if let Some(first_char) = word.chars().next() {
+                println!("Typing first character of word {} of {}: '{}'", i + 1, words.len(), first_char);
+                self.send_char(first_char);
+            }
+            for c in word.chars().skip(1) {
+                self.send_char(c);
+            }
+            if i < words.len() - 1 {
+                self.send_char(' ');
+            }
+            thread::sleep(time::Duration::from_millis(self.keypress_delay));
+        }
+        println!("Finished typing text");
     }
 }
