@@ -2,17 +2,21 @@ use iced::widget::{button, column, container, pick_list, row, text};
 use iced::{executor, Application, Command, Element, Settings, Theme};
 
 use crate::config_handler::Config;
+use crate::config_gui::{ConfigGui, ConfigMessage};
 
 pub struct TranscriberGui {
     config: Config,
     languages: Vec<String>,
     selected_language: String,
+    config_gui: Option<ConfigGui>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     LanguageSelected(String),
     OpenOptions,
+    CloseOptions,
+    ConfigMessage(ConfigMessage),
     Exit,
     EventOccurred(iced::Event),
 }
@@ -44,6 +48,7 @@ impl Application for TranscriberGui {
                 config,
                 languages,
                 selected_language,
+                config_gui: None,
             },
             Command::none(),
         )
@@ -65,8 +70,22 @@ impl Application for TranscriberGui {
                 Command::none()
             }
             Message::OpenOptions => {
-                // TODO: Implement opening options dialog
-                println!("Open options clicked");
+                self.config_gui = Some(ConfigGui::new(self.config.clone()));
+                Command::none()
+            }
+            Message::CloseOptions => {
+                self.config_gui = None;
+                Command::none()
+            }
+            Message::ConfigMessage(config_message) => {
+                if let Some(config_gui) = &mut self.config_gui {
+                    if let Err(e) = config_gui.update(config_message) {
+                        eprintln!("Failed to update config: {}", e);
+                    }
+                    if let ConfigMessage::SaveConfig = config_message {
+                        self.config = config_gui.config.clone();
+                    }
+                }
                 Command::none()
             }
             Message::Exit => iced::window::close(),
@@ -85,27 +104,34 @@ impl Application for TranscriberGui {
     }
 
     fn view(&self) -> Element<Message> {
-        let language_picker = pick_list(
-            &self.languages,
-            Some(self.selected_language.clone()),
-            Message::LanguageSelected,
-        )
-        .placeholder("Select language");
+        if let Some(config_gui) = &self.config_gui {
+            let config_view = config_gui.view().map(Message::ConfigMessage);
+            let close_button = button("Close Options").on_press(Message::CloseOptions);
+            
+            column![config_view, close_button].spacing(20).into()
+        } else {
+            let language_picker = pick_list(
+                &self.languages,
+                Some(self.selected_language.clone()),
+                Message::LanguageSelected,
+            )
+            .placeholder("Select language");
 
-        let options_button = button("Open Options").on_press(Message::OpenOptions);
+            let options_button = button("Open Options").on_press(Message::OpenOptions);
 
-        let content = column![
-            row![text("Language:").width(100), language_picker].spacing(10),
-            options_button,
-        ]
-        .spacing(20);
+            let content = column![
+                row![text("Language:").width(100), language_picker].spacing(10),
+                options_button,
+            ]
+            .spacing(20);
 
-        container(content)
-            .width(iced::Length::Fill)
-            .height(iced::Length::Fill)
-            .center_x()
-            .center_y()
-            .into()
+            container(content)
+                .width(iced::Length::Fill)
+                .height(iced::Length::Fill)
+                .center_x()
+                .center_y()
+                .into()
+        }
     }
 }
 

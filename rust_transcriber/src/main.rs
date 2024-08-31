@@ -14,3 +14,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Run the GUI
     run_gui(config)
 }
+mod config_gui;

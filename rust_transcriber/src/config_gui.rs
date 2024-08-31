@@ -1,0 +1,80 @@
+use iced::widget::{button, column, container, row, text, text_input};
+use iced::{Element, Length};
+
+use crate::config_handler::Config;
+
+#[derive(Debug, Clone)]
+pub enum ConfigMessage {
+    HotkeyChanged(String),
+    OpenAIApiKeyChanged(String),
+    WordDelayChanged(String),
+    KeyEventDelayChanged(String),
+    SaveConfig,
+}
+
+pub struct ConfigGui {
+    config: Config,
+    hotkey: String,
+    openai_api_key: String,
+    word_delay: String,
+    key_event_delay: String,
+}
+
+impl ConfigGui {
+    pub fn new(config: Config) -> Self {
+        Self {
+            hotkey: config.hotkey.clone(),
+            openai_api_key: config.openai_api_key.clone(),
+            word_delay: config.word_delay.to_string(),
+            key_event_delay: config.key_event_delay.to_string(),
+            config,
+        }
+    }
+
+    pub fn update(&mut self, message: ConfigMessage) -> Result<(), Box<dyn std::error::Error>> {
+        match message {
+            ConfigMessage::HotkeyChanged(value) => self.hotkey = value,
+            ConfigMessage::OpenAIApiKeyChanged(value) => self.openai_api_key = value,
+            ConfigMessage::WordDelayChanged(value) => self.word_delay = value,
+            ConfigMessage::KeyEventDelayChanged(value) => self.key_event_delay = value,
+            ConfigMessage::SaveConfig => {
+                self.config.hotkey = self.hotkey.clone();
+                self.config.openai_api_key = self.openai_api_key.clone();
+                self.config.word_delay = self.word_delay.parse().unwrap_or(self.config.word_delay);
+                self.config.key_event_delay = self.key_event_delay.parse().unwrap_or(self.config.key_event_delay);
+                self.config.save()?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn view(&self) -> Element<ConfigMessage> {
+        let content = column![
+            row![
+                text("Hotkey:").width(Length::Units(150)),
+                text_input("Enter hotkey", &self.hotkey, ConfigMessage::HotkeyChanged)
+            ].spacing(10),
+            row![
+                text("OpenAI API Key:").width(Length::Units(150)),
+                text_input("Enter API key", &self.openai_api_key, ConfigMessage::OpenAIApiKeyChanged)
+            ].spacing(10),
+            row![
+                text("Word Delay (ms):").width(Length::Units(150)),
+                text_input("Enter word delay", &self.word_delay, ConfigMessage::WordDelayChanged)
+            ].spacing(10),
+            row![
+                text("Key Event Delay (ms):").width(Length::Units(150)),
+                text_input("Enter key event delay", &self.key_event_delay, ConfigMessage::KeyEventDelayChanged)
+            ].spacing(10),
+            button("Save Configuration").on_press(ConfigMessage::SaveConfig)
+        ]
+        .spacing(20);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
+    }
+}
